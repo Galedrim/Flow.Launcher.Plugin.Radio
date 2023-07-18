@@ -1,0 +1,17 @@
+[
+    {
+        "name": "Chillhop",
+        "url": "https://www.youtube.com/watch?v=5yx6BWlEVcY",
+        "last_played": true
+    },
+    {
+        "name": "Lofi",
+        "url": "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+        "last_played": false
+    },
+    {
+        "name": "Synthwave",
+        "url": "https://youtu.be/4xDzrJKXOOY",
+        "last_played": false
+    }
+]

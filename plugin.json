@@ -1,0 +1,12 @@
+{
+    "ID": "3bbfd6d1-2e69-4090-b8e6-fe3c60a0c554",
+    "ActionKeyword": "ra",
+    "Name": "Radio",
+    "Description": "Search and find Radios",
+    "Author": "Galedrim",
+    "Version": "1.0.0",
+    "Language": "python",
+    "Website": "https://github.com/Galedrim/Flow.Launcher.Plugin.Radio",
+    "IcoPath": "Images\\app.png",
+    "ExecuteFileName": "main.py"
+}
