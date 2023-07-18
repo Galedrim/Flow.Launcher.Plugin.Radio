@@ -28,121 +28,139 @@ class Radio(Flox):
     def results(self, query):
 
         args = query.strip().split(" ")
+        command = str(args[0]).lower()
+
+        if not command:
+            self.process_default_command()
+        elif command in "list":
+            self.process_list_command(args[1:])
+        elif command in "add":
+            self.process_add_command(args[1:])
+        elif command in "remove":
+            self.process_remove_command(args[1:])
+        elif command in "volume":
+            self.process_volume_command(args[1:])
+        else:
+            self.process_default_command()
 
         # DEBUG
-        #self.delete_radio("https://www.youtube.com/watch?v=MVPTGNGiI-4")
+        # self.get_stream("https://www.youtube.com/watch?v=5yx6BWlEVcY")
+        # self.process_volume_command("+")
 
-        if len(args) == 1:
-            if(args[0] == ""):
-                last_stream = self.get_last_played_stream()
-                if(last_stream is not None):
-                    self.add_item(
-                        title="Play/Pause : {0}".format(last_stream["name"]),
-                        subtitle=last_stream["url"],
-                        icon=ICON_APP,
-                        method = self.play_pause_stream,
-                        parameters = [last_stream["url"]],
-                        score = 1
-                    )
-            elif(str(args[0]).lower() in "list"):
-                for stream in self.stream_list:
-                    stream = self.get_stream(stream["url"])
-                    if(stream is not None):
-                        self.add_item(
-                            title="Start: {0}".format(stream["name"]),
-                            subtitle=stream["url"],
-                            icon=ICON_APP,
-                            method = self.start_new_stream,
-                            parameters = [stream["url"]]
-                        )
-                    else:
-                        self.add_item(
-                            title="Unavailable: {0}".format(stream["name"]),
-                            subtitle=stream["url"],
-                            icon=ICON_APP_GRAYSCALE
-                        )
-            elif(str(args[0]).lower() in "add"):
-                self.add_item(
-                    title=("Add [NAME] [URL]"),
-                    subtitle="Add a new URL stream with associated name",
-                    icon=ICON_SETTINGS,
-                )
-            elif(str(args[0]).lower() in "remove"):
-                for stream in self.stream_list:
-                    self.add_item(
-                        title="Remove: {0} - {1} ".format(stream["name"], stream["url"]),
-                        subtitle="Remove an URL stream with associated name", 
-                        icon=ICON_SETTINGS,
-                    )
-
-            elif(str(args[0]).lower() in "play" or str(args[0]).lower() in "pause"):
-                last_stream = self.get_last_played_stream()
-                if(last_stream is not None):
-                    self.add_item(
-                        title="Play/Pause : {0}".format(last_stream["name"]),
-                        subtitle=last_stream["url"],
-                        icon=ICON_APP,
-                        method = self.play_pause_stream,
-                        parameters = [last_stream["url"]],
-                        score = 1
-                    )
-
-        elif len(args) == 2:
-            if(str(args[0]).lower() == "list"):
-                for stream in self.stream_list:
-                    if str(args[1]).lower() in stream["name"].lower():
-                        stream = self.get_stream(stream["url"])
-                        if(stream is not None):
-                            self.add_item(
-                                title="Start: {0}".format(stream["name"]),
-                                subtitle=stream["url"],
-                                icon=ICON_APP,
-                                method = self.start_new_stream,
-                                parameters = [stream["url"]]
-                            )
-                        else:
-                            self.add_item(
-                                title="Unavailable: {0}".format(stream["name"]),
-                                subtitle=stream["url"],
-                                icon=ICON_APP_GRAYSCALE
-                            )
-
-            elif(str(args[0]).lower() == "add"):
-                self.add_item(
-                    title="Add {0} [URL]".format(args[1]),
-                    subtitle="Add an URL stream with associated name", 
-                    icon=ICON_SETTINGS
-                )
-                
-            elif(str(args[0]).lower() == "remove"):
-                for stream in self.stream_list:
-                    if(str(args[1]).lower() in stream["name"].lower() or str(args[1]).lower() in stream["url"].lower()):
-                        self.add_item(
-                            title="Remove: {0} - {1} ".format(stream["name"], stream["url"]),
-                            subtitle="Remove an URL stream with associated name", 
-                            icon=ICON_SETTINGS,
-                            method = self.delete_stream,
-                            parameters = [stream["url"]]
-                        )
-
-        elif len(args) == 3:
-            if(str(args[0]).lower() == "add" and self.check_stream_name(args[1]) and self.check_radio_stream(args[2])):
-                    self.add_item(
-                        title="Add {0} - {1}".format(args[1], args[2]),
-                        subtitle="Add an URL stream with associated name", 
-                        icon=ICON_SETTINGS,
-                        method = self.save_stream,
-                        parameters = [args[1], args[2]]
-                    )
         return self._results
-    
+
+
+    def process_list_command(self, args):
+        for stream in self.stream_list:
+            name = stream["name"]
+            url = stream["url"]
+
+            if args and not any(arg.lower() in name.lower() for arg in args):
+                        continue
+
+            stream_data = self.get_stream(url)
+            if stream_data:
+                self.add_item(
+                    title="Start: {0}".format(name),
+                    subtitle=url,
+                    icon=ICON_APP,
+                    method=self.start_new_stream,
+                    parameters=[url]
+                )
+            else:
+                self.add_item(
+                    title="Unavailable: {0}".format(name),
+                    subtitle=url,
+                    icon=ICON_APP_GRAYSCALE
+                )
+
+    def process_add_command(self, args):
+        if len(args) == 1:
+            self.add_item(
+                title="Add {0} [URL]".format(args[1]),
+                subtitle="Add an URL stream with associated name", 
+                icon=ICON_SETTINGS
+            )
+        elif len(args) == 2 and self.check_stream_name(args[0]) and self.check_stream_url(args[1]):
+            self.add_item(
+                title="Add {0} - {1}".format(args[0], args[1]),
+                subtitle="Add an URL stream with associated name",
+                icon=ICON_SETTINGS,
+                method=self.save_stream,
+                parameters=args
+            )
+        else:
+            self.add_item(
+                title="Add [NAME] [URL]",
+                subtitle="Add a new URL stream with associated name",
+                icon=ICON_SETTINGS
+            )
+
+    def process_remove_command(self, args):
+        if not args:
+            self.add_item(
+                title="Remove [NAME] or [URL]",
+                subtitle="Remove an URL stream with associated name",
+                icon=ICON_SETTINGS
+            )
+        else:
+            for stream in self.stream_list:
+                if str(args[0]).lower() in stream["name"].lower() or str(args[0]).lower() in stream["url"].lower():
+                    self.add_item(
+                        title="Remove: {0} - {1}".format(stream["name"], stream["url"]),
+                        subtitle="Remove an URL stream with associated name",
+                        icon=ICON_SETTINGS,
+                        method=self.delete_stream,
+                        parameters=[stream["url"]]
+                    )
+
+    def process_volume_command(self, args):
+        if(len(args) == 1):
+            result = True
+            if(args[0].isdigit() and self.vlc_player.MIN_VOL < int(args[0]) < self.vlc_player.MAX_VOL):
+                subtitle = "Set the volume stream to {0}".format(args[0])
+            elif(args[0] == "+"):
+                subtitle = "Turn up the volume"
+            elif(args[0] == "-"):
+                subtitle = "Turn down the volume"
+            else:
+                result = False
+
+            if(result):
+                self.add_item(
+                    title="Volume {0} ".format(args[0]),
+                    subtitle=subtitle,
+                    icon=ICON_SETTINGS,
+                    method=self.set_volume_stream,
+                    parameters=[args[0]]
+                )
+        else:
+            self.add_item(
+                title="Volume [1-512] or [+/-]",
+                subtitle="Set the volume stream with absolute or relative value",
+                icon=ICON_SETTINGS
+            )
+
+    def process_default_command(self):
+            last_stream = self.get_last_played_stream()
+            if last_stream:
+                self.add_item(
+                    title="Play/Pause: {0}".format(last_stream["name"]),
+                    subtitle=last_stream["url"],
+                    icon=ICON_APP,
+                    method=self.play_pause_stream,
+                    parameters=[last_stream["url"]],
+                    score=1
+                )
+
+
     def check_stream_name(self, name):
         for stream in self.stream_list:
             if(stream["name"] == name):
                 return False
         return True
     
-    def check_radio_stream(self, url):  
+    def check_stream_url(self, url):  
         for stream in self.stream_list:
             if(stream["url"] == url):
                 return False
@@ -156,10 +174,10 @@ class Radio(Flox):
     def get_stream(self, url):
         stream = None
         available_streams = streamlink.streams(url)
-        print(available_streams)
         if "best" in available_streams:
             stream = available_streams["best"]
         return stream
+
 
     def start_new_stream(self, url):
         while(self.vlc_player.find_process()):
@@ -170,20 +188,25 @@ class Radio(Flox):
         self.set_last_played_stream(url)
 
     def play_pause_stream(self, url):
-        if(self.vlc_player.find_process()):
-            if(self.vlc_player.is_playing):
-                self.vlc_player.pause()
-            else:
-                self.vlc_player.play()
+        if self.vlc_player.find_process():
+            self.vlc_player.pause() if self.vlc_player.is_playing else self.vlc_player.play()
         else:
             stream = self.get_stream(url) 
             self.vlc_player.execute_new_process(stream)
             self.set_last_played_stream(url)
 
+    def set_volume_stream(self, level):
+        if (level[0].isdigit() and self.vlc_player.MIN_VOL < int(level[0]) < self.vlc_player.MAX_VOL):
+            self.vlc_player.set_volume(level)
+        elif(level == "+"):
+            self.vlc_player.volume_up
+        elif(level == "-"):
+            self.vlc_player.volume_down
+
     def save_stream(self, name, url):  
-        radio = {'name': name, 'url': url, 'last_played': False}
+        stream = {'name': name, 'url': url, 'last_played': False}
         with open(JSON_SETTINGS, "w") as file:
-            self.stream_list.append(radio)
+            self.stream_list.append(stream)
             file.seek(0)
             json.dump(self.stream_list, file, indent = 4)
 
@@ -199,6 +222,7 @@ class Radio(Flox):
                 self.stream_list.pop(index)
                 file.seek(0)
                 json.dump(self.stream_list, file, indent = 4)
+
 
     def get_last_played_stream(self):
         last_played_stream = None
@@ -218,6 +242,7 @@ class Radio(Flox):
         with open(JSON_SETTINGS, "w") as file:
             file.seek(0)
             json.dump(self.stream_list, file, indent = 4)
+
 
     def query(self, query):
         self.results(query)

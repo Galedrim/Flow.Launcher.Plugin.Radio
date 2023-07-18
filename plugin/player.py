@@ -1,15 +1,17 @@
 import socket
 import subprocess
 
-ICON_APP = "./Images/app.png"
-
 class VLCPlayer():
     def __init__(self):
-        self.VOL_STEP = 13
-        self.DEFAULT_APP_PATH = 'C:\\Program Files\\VideoLAN\\VLC\\'
         self.APP_NAME = 'vlc.exe'
+        self.DEFAULT_APP_PATH = 'C:\\Program Files\\VideoLAN\\VLC\\'+self.APP_NAME
         self.HOST = '127.0.0.1'
         self.PORT = 44500
+
+        self.MAX_VOL = 512
+        self.MIN_VOL = 0
+        self.VOL_STEP = 32
+
 
     def find_process(self):
         cmd = subprocess.run(
@@ -23,7 +25,7 @@ class VLCPlayer():
     def execute_new_process(self, stream):
         # Start a new detached process with the specified screen name and VLC command
         cmd = subprocess.Popen([
-            self.DEFAULT_APP_PATH+self.APP_NAME,"-I", "rc", "--rc-host", f"{self.HOST}:{self.PORT}", "--no-video", "--rc-quiet", stream.url
+            self.DEFAULT_APP_PATH,"-I", "rc", "--rc-host", f"{self.HOST}:{self.PORT}", "--no-video", "--rc-quiet", stream.url
         ])
 
     def kill_process(self):
@@ -60,17 +62,21 @@ class VLCPlayer():
         except:
             return None
 
+    def is_playing(self):
+        return self.send_command('is_playing')
+
     def play(self):
         self.send_command('play')
 
     def pause(self):
         self.send_command('pause')
 
+    def set_volume(self, level):
+        self.send_command("volume " + str(level))
+
     def volume_up(self):
+        print("volume_up")
         self.send_command("volup " + str(self.VOL_STEP))
     
     def volume_down(self):
         self.send_command("voldown " + str(self.VOL_STEP))
-
-    def is_playing(self):
-        return self.send_command('is_playing')
