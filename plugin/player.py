@@ -1,11 +1,17 @@
 import socket
 import subprocess
+import os
 
+from pathlib import Path
+from typing import Union
+
+DEFAULT_VLC_DIR = 'C:\\Program Files\\VideoLAN\\VLC\\'
 
 class VLCPlayer():
-    def __init__(self):
+
+    def __init__(self, path: Union[Path, str] = DEFAULT_VLC_DIR):
+        self.APP_PATH = Path(os.path.expandvars(path))
         self.APP_NAME = 'vlc.exe'
-        self.APP_PATH = 'C:\\Program Files\\VideoLAN\\VLC\\'+self.APP_NAME
         self.HOST = '127.0.0.1'
         self.PORT = 44500
 
@@ -20,7 +26,7 @@ class VLCPlayer():
 
     def execute_new_process(self, stream):
         subprocess.Popen([
-            self.APP_PATH,
+            self.APP_PATH.joinpath(self.APP_NAME),
             "-I",
             "rc",
             "--rc-host",
@@ -69,11 +75,5 @@ class VLCPlayer():
         except socket.error:
             return None
 
-    def is_playing(self):
-        return self.send_command('is_playing')
-
-    def play(self):
-        self.send_command('play')
-
-    def pause(self):
+    def pause_resume(self):
         self.send_command('pause')
