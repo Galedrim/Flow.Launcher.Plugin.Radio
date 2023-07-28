@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "flow-launcher-plugin-radio"
+version = "0.1.0"
+description = "Search and find radio stream"
+authors = ["Marin Paul <marinpaul03@gmail.com>"]
+readme = "README.md"
+packages = [{include = "flow"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+Flox-lib = "0.19.6"
+urllib3 = "2.0.3"
+streamlink = "6.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
